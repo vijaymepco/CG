@@ -1,0 +1,268 @@
+<html>
+<head></head>
+
+<body>
+<div style="display: block;border-bottom:10px">
+    <label>X:</label><input type="number" value="0" id="x" onchange="updateCanvas()">
+    <label>Y:</label><input type="number" value="0" id="y" onchange="updateCanvas()">
+    
+    <br>
+    <label>Scaling X:</label><input type="range" min="1" max="5" value="1" id="scalex" onchange="updateCanvas()">
+    <label>Scaling Y:</label><input type="range" min="1" max="5" value="1" id="scaley" onchange="updateCanvas()">
+   
+    <br>
+    <label>Rotation:</label><input type="range" min="0" max="360" value="0" id="angle" onchange="updateCanvas()">
+    <input type="radio" name="rotation"  id="frot">Fixed point Rotation 
+
+    <br>
+
+    <label>Shear X:</label><input type="range" min="0" max="4" value="0" id="shearx" onchange="updateCanvas()">
+    <label>Shear Y:</label><input type="range" min="0" max="4" value="0" id="sheary" onchange="updateCanvas()">
+   <br>
+   <label>Reflection About</label>
+        
+    <input type="radio" name="reflection"  id="refx" onchange="updateCanvas()">X
+    <input type="radio" name="reflection"  id="refy" onchange="updateCanvas()">Y
+    <input type="radio" name="reflection"  id="refno" onchange="updateCanvas()">NO
+    
+
+    <br>
+   <label>Fixed Point Scaling</label>
+        
+   <input type="radio" name="fsc"  id="fscx" onchange="updateCanvas()">X
+   <input type="radio" name="fsc"  id="fscy" onchange="updateCanvas()">Y
+   <input type="radio" name="fsc" checked  id="nofsc" onchange="updateCanvas()">NO
+   
+   
+    
+<br>
+    <button onclick="onApply()">Apply</button>
+</div>
+
+    <canvas id="canvas" width="700" height="700" style="border: 1px solid black;display: block;" ></canvas>
+
+<script>
+
+var canvas = document.getElementById("canvas");
+var context = canvas.getContext("2d");
+function drawAxes(){
+    context.moveTo(350,0);
+    context.lineTo(350,700);
+    context.stroke();
+    context.moveTo(0,350);
+    context.lineTo(700,350);
+    context.stroke();
+}
+
+x = document.getElementById("x");
+y = document.getElementById("y");
+scalex = document.getElementById("scalex");
+scaley = document.getElementById("scaley");
+angle = document.getElementById("angle");
+color =  document.getElementById("color");
+thetaval  =  document.getElementById("angleValue");
+
+refx = document.getElementById("refx");
+refy = document.getElementById("refy");
+refno = document.getElementById("refno");
+
+shearx = document.getElementById("shearx");
+sheary = document.getElementById("sheary");
+
+frot = document.getElementById('frot');
+
+
+fscx = document.getElementById("fscx");
+fscy = document.getElementById("fscy");
+nofsc = document.getElementById("nofsc");
+
+function Point(x,y){
+    this.x = x;
+    this.y = y;
+}
+
+var polygon = [];
+var dpolygon = [];
+polygon.push(new Point(0,0));
+polygon.push(new Point(100,0));
+polygon.push(new Point(50,150));
+
+
+
+function updateCanvas(){
+   onApply();
+}
+
+function draw(dpolygon) { 
+    context.beginPath();
+    console.log("Drawing dpolygon",dpolygon);
+    context.moveTo(dpolygon[0].x,dpolygon[0].y);
+    for(i=1;i<dpolygon.length;i++){
+        context.lineTo(dpolygon[i].x,dpolygon[i].y);
+        context.stroke();
+    }
+    context.lineTo(dpolygon[0].x,dpolygon[0].y);
+    context.stroke();
+    
+    context.fillStyle = cval;
+    context.fill(); 
+
+    drawAxes();
+
+  
+}
+
+function onApply(){
+
+    context.clearRect(0,0,700,700);
+    
+    var dpolygon = [];
+    dpolygon.push(new Point(0,0));
+    dpolygon.push(new Point(100,0));
+    dpolygon.push(new Point(50,150));
+    xval = x.value;
+    yval = y.value;
+
+    scx = scalex.value;
+    scy = scaley.value;
+
+
+    theta = parseInt(angle.value);
+
+    cval = color.value;
+
+    // Translation
+    dpolygon.forEach(p=> {
+        p.x = p.x+parseInt(xval);
+        p.y = p.y+parseInt(yval);
+    });
+
+    if(nofsc.checked){
+        //Scaling
+        console.log('Normal Sacling',nofsc);
+        dpolygon.forEach(p=> {
+            p.x = p.x*parseInt(scx);
+            p.y = p.y*parseInt(scy);
+        });
+    }else{
+         // to origin
+        ox = dpolygon[0].x;
+        oy = dpolygon[0].y;
+
+        dpolygon.forEach(p=>{
+            p.x = p.x-ox;
+            p.y = p.y-oy;
+        });
+
+
+        // Scaling
+        if(fscx.checked){
+            console.log('Fixed X');
+            dpolygon.forEach(p=>{
+                p.x = p.x*parseInt(scx);
+            });
+        }
+        if(fscy.checked){
+            console.log('Fixed Y');
+            dpolygon.forEach(p=>{
+                p.y = p.y*parseInt(scy);
+            });
+        }
+
+        // back to normal
+        dpolygon.forEach(p=>{
+            p.x = p.x+ox;
+            p.y = p.y+oy;
+        });
+    }
+    
+ //   console.log("Scaling:",scx,scy); 
+  //  console.log("SC_POLYGON:",dpolygon);    
+
+
+   // console.log("THETA,COLOR:",theta,color.value);
+
+    if(theta==NaN){
+        theta = 0;
+    }
+
+    // Rotation
+
+    if(!frot.checked){
+        dpolygon.forEach(p => {
+            tx = p.x;
+            ty = p.y;
+            p.x = (tx*Math.cos(theta*Math.PI/180))+(ty*Math.sin(theta*Math.PI/180));
+            p.y = -(tx*Math.sin(theta*Math.PI/180))+(ty*Math.cos(theta*Math.PI/180));
+          //  console.log(p.x+" : "+p.y);
+        });
+    }else{
+
+         // to origin
+        ox = dpolygon[0].x;
+        oy = dpolygon[0].y;
+
+        dpolygon.forEach(p=>{
+            p.x = p.x-ox;
+            p.y = p.y-oy;
+        });
+
+        dpolygon.forEach(p => {
+            tx = p.x;
+            ty = p.y;
+            p.x = (tx*Math.cos(theta*Math.PI/180))+(ty*Math.sin(theta*Math.PI/180));
+            p.y = -(tx*Math.sin(theta*Math.PI/180))+(ty*Math.cos(theta*Math.PI/180));
+          //  console.log(p.x+" : "+p.y);
+        });
+
+          // back to normal
+          dpolygon.forEach(p=>{
+            p.x = p.x+ox;
+            p.y = p.y+oy;
+        });
+    }
+
+
+    //Reflection
+    if(!refno.checked){
+        if(refx.checked){
+            dpolygon.forEach(function(p) {
+                p.y = -p.y;;
+        });
+        }else if(refy.checked){
+            dpolygon.forEach(function(p) {
+                p.x = -p.x;
+        });
+        }
+    }
+
+
+    console.log("shear",shearx.value,sheary.value);
+    //Shearing
+    len = 3;
+    // x-shear
+    dpolygon[len-1].y = dpolygon[len-1].y + sheary.value*dpolygon[len-1].x;
+
+    //y-shear
+    dpolygon[len-1].x = dpolygon[len-1].x + shearx.value*dpolygon[len-1].y;
+
+
+    dpolygon.forEach(function(p) {
+        p.x = p.x+350;
+        p.y = 350-p.y;
+    });
+    draw(dpolygon); 
+
+}
+
+
+
+
+
+
+
+</script>
+
+</body>
+
+</html>

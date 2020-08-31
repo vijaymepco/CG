@@ -1,0 +1,162 @@
+<html>
+
+<head></head>
+
+<body>
+<h1>Reflection</h1>
+<canvas id="canvas" width="1000" height="1000" style="border: 1 px solid black"></canvas>
+
+<script>
+
+var canvas = document.getElementById("canvas");
+var context = canvas.getContext("2d");
+
+function Point(x,y){
+    this.x = x;
+    this.y = y;
+}
+
+
+function radToDegree(rad){
+    return theta *180/(22/7);
+}
+
+function printPolygon(polygon){
+    //Printing Coords
+    polygon.forEach(p => {
+        console.log(p.x);
+        console.log(p.y);
+    });
+}
+function multiply(mata,matb){
+  matc = [];
+  nr = mata.length;
+  nc = matb[0].length;
+
+    console.log(nr+":"+nc);
+
+  for(i=0;i<nr;i++){
+      row =[];
+      for(j=0;j<nc;j++){
+          e = 0;
+          for(k=0;k<nr;k++){
+              e = e+mata[i][k]*matb[k][j];
+          }
+          row.push(e);
+      }
+      matc.push(row);
+  }
+  return matc;
+}
+
+xmin = 0;
+ymin = 0;
+xmax = 600;
+ymax = 600;
+
+//Origin
+o = 300;
+
+context.rect(xmin,ymin,xmax-xmin,ymax-ymin);
+context.stroke();
+
+polygon = [];
+polygon.push(new Point(10,10));
+polygon.push(new Point(100,10));
+polygon.push(new Point(100,100));
+
+
+console.log("Initial");
+printPolygon(polygon);
+
+ //y =   15-4x
+
+m=4/3;
+c=5;
+x = -c/m;
+y = c;
+
+theta = Math.atan(Math.abs(y)/Math.abs(x));
+
+//Radian to Degree
+theta = theta *180/(22/7);
+
+console.log("X:"+x);
+console.log("Y:"+y);
+console.log("tan:"+Math.abs(y)/Math.abs(x));
+console.log("THETA:"+theta);
+
+//Move to Origin
+tx = Math.abs(x);   
+side = 0;
+if(x<0){
+    side = -1;
+    polygon.forEach(p => {
+        p.x = p.x+tx;
+    });
+}else if(x>0){
+    side = 1;
+    polygon.forEach(p => {
+        p.x = p.x-tx;
+    });
+}
+
+// Rotate Parallel to x axis
+var tx,ty;
+polygon.forEach(p => {
+        console.log(p.x+" : "+p.y);
+        tx = p.x;
+        ty = p.y;
+        p.x = (tx*Math.cos(theta*Math.PI/180))+(ty*Math.sin(theta*Math.PI/180));
+        p.y = -(tx*Math.sin(theta*Math.PI/180))+(ty*Math.cos(theta*Math.PI/180));
+        console.log(p.x+" : "+p.y);
+});
+
+
+//Reflect
+polygon.forEach(p => {
+    p.y = -p.y;
+});
+
+// Inverse Rotation
+polygon.forEach(p => {
+        tx = p.x;
+        ty = p.y;
+        p.x = (tx*Math.cos(theta*Math.PI/180))-(ty*Math.sin(theta*Math.PI/180));
+        p.y = (tx*Math.sin(theta*Math.PI/180))+(ty*Math.cos(theta*Math.PI/180));
+});
+
+
+// Inverse Translation
+if(side < 0){
+    polygon.forEach(p => {
+        p.x = p.x-tx;
+    });
+}else if(side > 0){
+    polygon.forEach(p => {
+        p.x = p.x+tx;
+    });
+}
+
+printPolygon(polygon);  
+
+polygon.forEach(p => {
+    p.x = p.x+o;
+    p.y = p.y+o;
+});
+
+printPolygon(polygon);  
+
+context.moveTo(polygon[0].x,polygon[0].y);
+for(i=1;i<polygon.length;i++){
+    context.lineTo(polygon[i].x,polygon[i].y);
+    context.stroke();
+}
+context.lineTo(polygon[0].x,polygon[0].y);
+context.stroke();
+
+</script>
+
+</body>
+
+</html>

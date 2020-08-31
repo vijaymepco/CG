@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<script>
+var gl;   
+var shaderProgram      
+var a_coords_location;      // location of the "a_coords" attribute variable
+var a_coords_buffer;        // a VBO to hold the vertex coordinates
+var a_texCoords_location;   // location of the "a_texCoords" attribute variable
+var a_texCoords_buffer;     // a VBO to hold the texture coordinates
+
+var u_texture_location;     // the location of the "u_texture" uniform variable
+var vertexData = [
+    -0.25, 0.75,   
+    0.35, -0.96,  
+    -0.90,-0.95, 
+    -0.50,-0.95,  
+    0.5,0.99, 
+    -0.15,-0.95 
+];
+indices=[0,1,2,3,4,5];
+var textureObject;          // A texture object to hold the texture image.
+         /*======= Defining and storing the geometry ======*/
+
+         var vertexShaderSource =
+       "attribute vec2 a_coords;\n" +
+       "attribute vec2 a_texCoords;\n" +
+       "varying vec2 v_texCoords;\n" +
+       "void main() {\n" +
+       "   v_texCoords = a_texCoords;\n" +
+       "   gl_Position = vec4(a_coords, 0.0, 1.0);\n" +
+       "}\n";
+
+var fragmentShaderSource =
+       "precision mediump float;\n" +
+       "uniform sampler2D u_texture;\n" +  // A sampler variable to represent the texture.
+       "varying vec2 v_texCoords;\n" +   // The texture coordinates for this pixel.
+       "void main() {\n" +
+       "   vec4 color = texture2D( u_texture, v_texCoords );\n" +  // Sample the texture.
+       "   gl_FragColor = color;\n" +   // Just use the color from the texture as the pixel color.
+       "}\n";
+	   function shadepgm(){
+         /*=================== Shaders ====================*/
+         
+         // Create a vertex shader object
+         var vertShader = gl.createShader(gl.VERTEX_SHADER);
+
+         // Attach vertex shader source code
+         gl.shaderSource(vertShader, vertexShaderSource);
+
+         // Compile the vertex shader
+         gl.compileShader(vertShader);
+		 // Create fragment shader object
+         var fragShader = gl.createShader(gl.FRAGMENT_SHADER);
+
+         // Attach fragment shader source code
+         gl.shaderSource(fragShader, fragmentShaderSource);
+
+         // Compile the fragmentt shader
+         gl.compileShader(fragShader);
+
+         // Create a shader program object to store
+         // the combined shader program
+         shaderProgram = gl.createProgram();
+
+         // Attach a vertex shader
+         gl.attachShader(shaderProgram, vertShader);
+
+         // Attach a fragment shader
+         gl.attachShader(shaderProgram, fragShader);
+
+         // Link both the programs
+         gl.linkProgram(shaderProgram);
+
+         // Use the combined shader program object
+         gl.useProgram(shaderProgram);
+
+         /*======= Associating shaders to buffer objects ======*/
+}
+         
+function init(){
+var canvas = document.getElementById('my_Canvas');
+gl = canvas.getContext('experimental-webgl');
+shadepgm();
+	a_coords_location = gl.getAttribLocation(shaderProgram, "a_coords");
+    a_coords_buffer = gl.createBuffer();
+    a_texCoords_location = gl.getAttribLocation(shaderProgram, "a_texCoords");
+    a_texCoords_buffer = gl.createBuffer();
+    
+  //  u_texture_location = gl.getUniformLocation(shaderProgram, "u_texture");
+    
+    /* Create a texture object to hold the texture, and start loading it.
+       The draw() function will be called after the image loads. */
+    
+    textureObject = gl.createTexture();
+    
+    loadTexture( "color.jpg", textureObject );  // load the texture image
+		 }
+		 
+		 function draw() {
+
+    gl.clearColor(0.53,0.15,0.25,0.59);  // glClear will fill the canvas with white
+    gl.clear(gl.COLOR_BUFFER_BIT);  // clear the canvas
+    
+    /* Set up values for the "a_coords" attribute */
+
+    var coords = new Float32Array(vertexData);
+   
+    gl.bindBuffer(gl.ARRAY_BUFFER, a_coords_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, coords, gl.STREAM_DRAW);
+    gl.vertexAttribPointer(a_coords_location, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(a_coords_location); 
+   
+    /* Set up values for the "a_texCoords" attribute */
+   
+    var texCoords = new Float32Array(vertexData);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, a_texCoords_buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, texCoords, gl.STREAM_DRAW);
+    gl.vertexAttribPointer(a_texCoords_location, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(a_texCoords_location);
+    
+    /* set up the value for the uniform sampler variable.  The value is
+       zero since the texture object that we want to use is bound to
+       texture unit number zero.  In this program, the next two lines
+       are not needed, since TEXTURE0 is the default active texture unit,
+       and that never changes.  And the textureObject was bound to
+       texture unit 0 when the texture was loaded. */
+    
+    gl.activeTexture(gl.TEXTURE0);
+   // gl.bindTexture(gl.TEXTURE_2D, textureObject);
+   // gl.uniform1i( u_texture_location, 0 );
+    
+    /* Draw the triangle. */
+   
+    gl.drawArrays(gl.TRIANGLES,0,6);
+}
+/**
+ *  Loads a texture image asynchronously.  The first paramter is the url
+ *  from which the image is to be loaded.  The second parameter is the
+ *  texture object into which the image is to be loaded.  When the image
+ *  has finished loading, the draw() function will be called to draw the
+ *  triangle with the texture.  (Also, if an error occurs during loading,
+ *  an error message is displayed on the page, and draw() is called to
+ *  draw the triangle without the texture.)
+ */
+function loadTexture( url, textureObject ) {
+    var img = new Image();  //  A DOM image element to represent the image.
+    img.onload = function() { 
+        // This function will be called after the image loads successfully.
+        // We have to bind the texture object to the TEXTURE_2D target before
+        // loading the image into the texture object. 
+        gl.bindTexture(gl.TEXTURE_2D, textureObject);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);
+        gl.generateMipmap(gl.TEXTURE_2D);  // Create mipmaps; you must either
+                              // do this or change the minification filter.
+                              gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER,
+                      gl.NEAREST_MIPMAP_LINEAR );
+    gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        draw();  // Draw the canvas, with the texture.  
+    }
+    img.onerror = function(e,f) { 
+        // This function will be called if an error occurs while loading.
+        document.getElementById("headline").innerHTML =
+                        "<p>Error.</p>";
+        draw();  // Draw without the texture; triangle will be black.
+    }
+	//img.crossOrigin = "Use-Credentials";
+    img.src = url;  // Start loading of the image.
+                    // This must be done after setting onload and onerror.
+}
+
+
+         // POINTS, LINE_STRIP, LINE_LOOP, LINES,
+         // TRIANGLE_STRIP,TRIANGLE_FAN, TRIANGLES
+      </script>
+	  <body onload="init()" style="background-color: pink">
+
+<h2 id="headline">Texture Mapping
+
+
+</h2>
+
+
+<div id="canvas-holder">
+<canvas id="my_Canvas" width="500" height="500"></canvas>
+</div>
+
+</body>
+</html>
+   </body>
+</html>

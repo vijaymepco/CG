@@ -1,0 +1,93 @@
+<html>
+
+<head></head>
+
+<body>
+
+<canvas id="canvas" width="600" height="600" style="border: 1 px solid black"></canvas>
+
+<script>
+
+var canvas = document.getElementById("canvas");
+
+var context = canvas.getContext("2d");
+
+
+function Point(x,y){
+    this.x = x;
+    this.y = y;
+}
+function multiply(mata,matb){
+  matc = [];
+  nr = mata.length;
+  nc = matb[0].length;
+
+    console.log(nr+":"+nc);
+
+  for(i=0;i<nr;i++){
+      row =[];
+      for(j=0;j<nc;j++){
+          e = 0;
+          for(k=0;k<nr;k++){
+              e = e+mata[i][k]*matb[k][j];
+          }
+          row.push(e);
+      }
+      matc.push(row);
+  }
+  return matc;
+}
+
+xmin = 0;
+ymin = 0;
+xmax = 600;
+ymax = 600;
+
+//Origin
+o = 300;
+
+context.rect(xmin,ymin,xmax-xmin,ymax-ymin);
+context.stroke();
+
+polygon = [];
+polygon.push(new Point(60,200));
+polygon.push(new Point(240,200));
+polygon.push(new Point(-130,-60));
+polygon.push(new Point(-200,0));
+
+
+polygon.forEach(function(p) {
+  p.x = o+p.x;
+  p.y = o+p.y;
+});
+
+console.log(polygon);
+
+
+shx = 0.4;
+shy = 0.4;
+
+
+len = 3;
+// x-shear
+polygon[len-1].y = polygon[len-1].y + shy*polygon[len-1].x;
+
+//y-shear
+polygon[len-1].x = polygon[len-1].x + shx*polygon[len-1].y;
+
+
+console.log(polygon);
+
+context.moveTo(polygon[0].x,polygon[0].y);
+for(i=1;i<polygon.length;i++){
+    context.lineTo(polygon[i].x,polygon[i].y);
+    context.stroke();
+}
+context.lineTo(polygon[0].x,polygon[0].y);
+context.stroke();
+
+</script>
+
+</body>
+
+</html>
